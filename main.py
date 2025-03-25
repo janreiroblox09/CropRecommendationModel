@@ -8,40 +8,39 @@ import os
 
 app = FastAPI()
 
-# Load the trained Random Forest model
+# ✅ Load the trained Random Forest model
 try:
     with open("rfc.pkl", "rb") as model_file:
         model = pickle.load(model_file)
     print("✅ Random Forest Model Loaded Successfully!")
 except Exception as e:
-    print(f"❌ ERROR: Failed to load model: {e}")
+    print(f"❌ Error Loading Model: {e}")
 
-# Load the label encoder
+# ✅ Load the label encoder
 try:
     with open("label_encoder.pkl", "rb") as encoder_file:
         label_encoder = pickle.load(encoder_file)
     print("✅ Label Encoder Loaded Successfully!")
 except Exception as e:
-    print(f"❌ ERROR: Failed to load label encoder: {e}")
+    print(f"❌ Error Loading Label Encoder: {e}")
 
-# Google Sheets API Authentication
+# ✅ Google Sheets API Authentication
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials.json"
 
-if os.path.exists(GOOGLE_CREDENTIALS_PATH):
-    try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDENTIALS_PATH, scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("Soil_Data").sheet1  # Adjust if your sheet name is different
-        print("✅ Google Sheets Authentication Successful!")
-    except Exception as e:
-        print(f"❌ ERROR: Google Sheets Authentication Failed: {e}")
-        sheet = None
-else:
-    print("❌ ERROR: google_credentials.json NOT FOUND in Render secrets!")
-    sheet = None
+try:
+    if not os.path.exists(GOOGLE_CREDENTIALS_PATH):
+        raise FileNotFoundError("google_credentials.json not found in secrets!")
 
-# Define input model
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDENTIALS_PATH, scope)
+    client = gspread.authorize(creds)
+    sheet = client.open("Data").sheet1  # Ensure the sheet name is correct
+
+    print("✅ Google Sheets Authentication Successful!")
+except Exception as e:
+    print(f"❌ ERROR: Google Sheets Authentication Failed: {e}")
+
+# ✅ Define Input Model
 class SoilData(BaseModel):
     N: float
     P: float
@@ -58,9 +57,6 @@ def read_root():
 @app.get("/fetch-data/")
 def fetch_data():
     """ Fetch latest row from Google Sheets """
-    if not sheet:
-        return {"error": "Google Sheets is not connected. Check your credentials!"}
-    
     try:
         data = sheet.get_all_values()
         last_row = data[-1]  # Get the latest row
@@ -71,10 +67,7 @@ def fetch_data():
 @app.post("/predict/")
 def predict_crop(soil: SoilData):
     """ Predict Crop Recommendation """
-    try:
-        input_data = np.array([[soil.N, soil.P, soil.K, soil.temperature, soil.humidity, soil.pH, soil.rainfall]])
-        prediction = model.predict(input_data)[0]
-        crop = label_encoder.inverse_transform([prediction])[0]  # Convert back to crop name
-        return {"recommended_crop": crop}
-    except Exception as e:
-        return {"error": f"Prediction failed: {e}"}
+    input_data = np.array([[soil.N, soil.P, soil.K, soil.temperature, soil.humidity, soil.pH, soil.rainfall]])
+    prediction = model.predict(input_data)[0]
+    crop = label_encoder.inverse_transform([prediction])[0]  # Convert back to crop name
+    return {"recommended_crop": crop}
