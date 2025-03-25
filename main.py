@@ -6,6 +6,7 @@ import numpy as np
 from pydantic import BaseModel
 import os
 
+
 app = FastAPI()
 
 # ✅ Load the trained Random Forest model
@@ -26,6 +27,7 @@ except Exception as e:
 
 # ✅ Google Sheets API Authentication
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials.json"
+print("✅ Checking for Google Credentials:", os.path.exists(GOOGLE_CREDENTIALS_PATH))
 
 try:
     if not os.path.exists(GOOGLE_CREDENTIALS_PATH):
