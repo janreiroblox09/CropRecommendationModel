@@ -96,3 +96,14 @@ def predict_crop(soil: SoilData):
     except Exception as e:
         print(f"❌ Prediction Error: {e}\n{traceback.format_exc()}")
         return {"error": f"Prediction failed: {e}"}
+
+@app.post("/receive-averages/")
+def receive_averages(data: dict):
+    """ Receive average data from Google Apps Script """
+    try:
+        print("✅ Received Average Data:", data)
+        return {"message": "Averages received successfully!", "data": data}
+    except Exception as e:
+        print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
+        return {"error": f"Failed to receive averages: {e}"}
+
