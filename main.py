@@ -42,14 +42,19 @@ def receive_averages(data: AveragesData):
     try:
         print("✅ Received Average Data:", data)
 
-        input_data = np.array([[
+        input_data = np.array([[ 
             data.nitrogen, data.phosphorus, data.potassium,
             data.temperature, data.humidity, data.soilPH, data.rainfall
         ]])
 
+        print(f"🟡 Input Data for Model: {input_data}")
+
         # Predict crop
-        prediction = model.predict(input_data)[0]
-        crop = label_encoder.inverse_transform([prediction])[0]
+        prediction = model.predict(input_data)[0]  # Check if this runs
+        print(f"🎯 Predicted Label (Encoded): {prediction}")
+
+        crop = label_encoder.inverse_transform([prediction])[0]  # Check if this runs
+        print(f"✅ Final Recommended Crop: {crop}")
 
         return {"recommended_crop": crop}
 
