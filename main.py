@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import pickle
 import numpy as np
 from pydantic import BaseModel
+import requests
 import traceback
 
 app = FastAPI()
@@ -32,6 +33,9 @@ class AveragesData(BaseModel):
     rainfall: float
     soilPH: float
 
+# Raspberry Pi URL
+raspberry_pi_url = "http://192.168.1.10:5000/receive-data"  # Modify this to match your Flask endpoint
+
 @app.get("/")
 def read_root():
     return {"message": "Crop Recommendation API is Running!"}
@@ -55,6 +59,28 @@ def receive_averages(data: AveragesData):
 
         crop = label_encoder.inverse_transform([prediction])[0]  # Check if this runs
         print(f"✅ Final Recommended Crop: {crop}")
+
+        # Send data to Raspberry Pi
+        data_to_send = {
+            "nitrogen": data.nitrogen,
+            "phosphorus": data.phosphorus,
+            "potassium": data.potassium,
+            "temperature": data.temperature,
+            "humidity": data.humidity,
+            "rainfall": data.rainfall,
+            "soilPH": data.soilPH,
+            "recommended_crop": crop
+        }
+
+        # Sending data to Raspberry Pi
+        try:
+            response = requests.post(raspberry_pi_url, json=data_to_send)
+            if response.status_code == 200:
+                print("✅ Data sent successfully to Raspberry Pi!")
+            else:
+                print(f"❌ Failed to send data to Raspberry Pi. HTTP Status Code: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Error sending data to Raspberry Pi: {e}")
 
         return {"recommended_crop": crop}
 
