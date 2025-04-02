@@ -79,3 +79,15 @@ def receive_averages(data: AveragesData):
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
         return {"error": f"Failed to process averages: {e}"}
+
+# Load the trained model
+with open("rfc.pkl", "rb") as model_file:
+    model = pickle.load(model_file)
+
+# Load the label encoder
+with open("label_encoder.pkl", "rb") as encoder_file:
+    label_encoder = pickle.load(encoder_file)
+
+# 🟢 Load the scaler (NEW STEP)
+with open("scaler.pkl", "rb") as scaler_file:
+    scaler = pickle.load(scaler_file)
