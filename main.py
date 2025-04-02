@@ -6,7 +6,7 @@ import traceback
 
 app = FastAPI()
 
-# Load the trained Random Forest model
+# ✅ Load the trained Random Forest model
 try:
     with open("rfc.pkl", "rb") as model_file:
         model = pickle.load(model_file)
@@ -14,7 +14,7 @@ try:
 except Exception as e:
     print(f"❌ Error Loading Model: {e}\n{traceback.format_exc()}")
 
-# Load the label encoder
+# ✅ Load the label encoder
 try:
     with open("label_encoder.pkl", "rb") as encoder_file:
         label_encoder = pickle.load(encoder_file)
@@ -22,7 +22,15 @@ try:
 except Exception as e:
     print(f"❌ Error Loading Label Encoder: {e}\n{traceback.format_exc()}")
 
-# Define Input Model for receiving average data
+# ✅ Load the scaler (NEW)
+try:
+    with open("scaler.pkl", "rb") as scaler_file:
+        scaler = pickle.load(scaler_file)
+    print("✅ Scaler Loaded Successfully!")
+except Exception as e:
+    print(f"❌ Error Loading Scaler: {e}\n{traceback.format_exc()}")
+
+# ✅ Define Input Model
 class AveragesData(BaseModel):
     nitrogen: float
     phosphorus: float
@@ -32,13 +40,13 @@ class AveragesData(BaseModel):
     rainfall: float
     soilPH: float
 
-# Global variable to store the latest data and recommendation
+# ✅ Global variable to store the latest data and recommendation
 latest_data = None
 latest_recommendation = None
 
 @app.get("/")
 def read_root():
-    # Print the latest data and recommendation
+    """ Root endpoint to check API status """
     if latest_data and latest_recommendation:
         return {
             "message": "Crop Recommendation API is Running!",
@@ -51,27 +59,32 @@ def read_root():
 @app.post("/receive-averages/")
 def receive_averages(data: AveragesData):
     """ Receive average data and predict crop recommendation """
-    global latest_data, latest_recommendation  # Declare as global to update them
+    global latest_data, latest_recommendation
 
     try:
         print("✅ Received Average Data:", data)
 
+        # Convert input to NumPy array
         input_data = np.array([[ 
             data.nitrogen, data.phosphorus, data.potassium,
             data.temperature, data.humidity, data.soilPH, data.rainfall
         ]])
 
-        print(f"🟡 Input Data for Model: {input_data}")
+        print(f"🟡 Raw Input Data: {input_data}")
 
-        # Predict crop
-        prediction = model.predict(input_data)[0]  # Check if this runs
+        # ✅ Scale the input data (IMPORTANT FIX)
+        scaled_input = scaler.transform(input_data)
+        print(f"🟢 Scaled Input Data: {scaled_input}")
+
+        # ✅ Predict crop
+        prediction = model.predict(scaled_input)[0]  
         print(f"🎯 Predicted Label (Encoded): {prediction}")
 
-        crop = label_encoder.inverse_transform([prediction])[0]  # Check if this runs
+        crop = label_encoder.inverse_transform([prediction])[0]  
         print(f"✅ Final Recommended Crop: {crop}")
 
-        # Store the received data and recommendation in global variables
-        latest_data = data.dict()  # Convert to dictionary for easy display
+        # ✅ Store the received data and recommendation
+        latest_data = data.dict()
         latest_recommendation = crop
 
         return {"recommended_crop": crop}
@@ -80,14 +93,3 @@ def receive_averages(data: AveragesData):
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
         return {"error": f"Failed to process averages: {e}"}
 
-# Load the trained model
-with open("rfc.pkl", "rb") as model_file:
-    model = pickle.load(model_file)
-
-# Load the label encoder
-with open("label_encoder.pkl", "rb") as encoder_file:
-    label_encoder = pickle.load(encoder_file)
-
-# 🟢 Load the scaler (NEW STEP)
-with open("scaler.pkl", "rb") as scaler_file:
-    scaler = pickle.load(scaler_file)
