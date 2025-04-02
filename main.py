@@ -32,13 +32,27 @@ class AveragesData(BaseModel):
     rainfall: float
     soilPH: float
 
+# Global variable to store the latest data and recommendation
+latest_data = None
+latest_recommendation = None
+
 @app.get("/")
 def read_root():
-    return {"message": "Crop Recommendation API is Running!"}
+    # Print the latest data and recommendation
+    if latest_data and latest_recommendation:
+        return {
+            "message": "Crop Recommendation API is Running!",
+            "latest_data": latest_data,
+            "latest_recommendation": latest_recommendation,
+        }
+    else:
+        return {"message": "Crop Recommendation API is Running! No data received yet."}
 
 @app.post("/receive-averages/")
 def receive_averages(data: AveragesData):
     """ Receive average data and predict crop recommendation """
+    global latest_data, latest_recommendation  # Declare as global to update them
+
     try:
         print("✅ Received Average Data:", data)
 
@@ -55,6 +69,10 @@ def receive_averages(data: AveragesData):
 
         crop = label_encoder.inverse_transform([prediction])[0]  # Check if this runs
         print(f"✅ Final Recommended Crop: {crop}")
+
+        # Store the received data and recommendation in global variables
+        latest_data = data.dict()  # Convert to dictionary for easy display
+        latest_recommendation = crop
 
         return {"recommended_crop": crop}
 
