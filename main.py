@@ -1,3 +1,4 @@
+import requests
 from fastapi import FastAPI
 import pickle
 import numpy as np
@@ -56,6 +57,27 @@ def receive_averages(data: AveragesData):
         crop = label_encoder.inverse_transform([prediction])[0]  # Check if this runs
         print(f"✅ Final Recommended Crop: {crop}")
 
+        # Prepare data to send to the Raspberry Pi
+        crop_data = {
+            "recommended_crop": crop,
+            "nitrogen": data.nitrogen,
+            "phosphorus": data.phosphorus,
+            "potassium": data.potassium,
+            "temperature": data.temperature,
+            "humidity": data.humidity,
+            "rainfall": data.rainfall,
+            "soilPH": data.soilPH
+        }
+
+        # Send data to the Raspberry Pi via HTTP POST request
+        raspberry_pi_url = "http://192.168.1.10:8000/receive-crop-data/"
+        response = requests.post(raspberry_pi_url, json=crop_data)
+        
+        if response.status_code == 200:
+            print("✅ Data sent to Raspberry Pi successfully!")
+        else:
+            print(f"❌ Failed to send data to Raspberry Pi. Status code: {response.status_code}")
+        
         return {"recommended_crop": crop}
 
     except Exception as e:
