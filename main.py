@@ -92,3 +92,14 @@ def receive_averages(data: AveragesData):
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
         return {"error": f"Failed to process averages: {e}"}
+
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all domains (replace with specific domains if needed)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
