@@ -42,7 +42,7 @@ class AveragesData(BaseModel):
     soilPH: float
 
 # ✅ Raspberry Pi Flask Server URL
-RPI_URL = "http://192.168.1.101:5000/receive-data"
+RPI_URL = "http://192.168.1.10:5000/receive-data"
 
 # ✅ Global variable to store the latest data and recommendation
 latest_data = None
