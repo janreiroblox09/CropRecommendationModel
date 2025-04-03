@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from pydantic import BaseModel
 import traceback
+import requests  # ✅ For sending data to Raspberry Pi
 
 app = FastAPI()
 
@@ -22,7 +23,7 @@ try:
 except Exception as e:
     print(f"❌ Error Loading Label Encoder: {e}\n{traceback.format_exc()}")
 
-# ✅ Load the scaler (NEW)
+# ✅ Load the scaler
 try:
     with open("scaler.pkl", "rb") as scaler_file:
         scaler = pickle.load(scaler_file)
@@ -39,6 +40,9 @@ class AveragesData(BaseModel):
     humidity: float
     rainfall: float
     soilPH: float
+
+# ✅ Raspberry Pi Flask Server URL
+RPI_URL = "http://<YOUR_PI_IP>:5000/receive-data"  # ⬅️ Replace <YOUR_PI_IP> with actual Raspberry Pi IP
 
 # ✅ Global variable to store the latest data and recommendation
 latest_data = None
@@ -58,7 +62,7 @@ def read_root():
 
 @app.post("/receive-averages/")
 def receive_averages(data: AveragesData):
-    """ Receive average data and predict crop recommendation """
+    """ Receive soil data, predict crop recommendation, and send it to Raspberry Pi """
     global latest_data, latest_recommendation
 
     try:
@@ -72,7 +76,7 @@ def receive_averages(data: AveragesData):
 
         print(f"🟡 Raw Input Data: {input_data}")
 
-        # ✅ Scale the input data (IMPORTANT FIX)
+        # ✅ Scale the input data
         scaled_input = scaler.transform(input_data)
         print(f"🟢 Scaled Input Data: {scaled_input}")
 
@@ -87,9 +91,13 @@ def receive_averages(data: AveragesData):
         latest_data = data.dict()
         latest_recommendation = crop
 
+        # ✅ Send the recommendation to Raspberry Pi
+        payload = {"recommended_crop": crop}
+        response = requests.post(RPI_URL, json=payload)
+        print(f"📡 Sent to Raspberry Pi: {response.text}")
+
         return {"recommended_crop": crop}
 
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
         return {"error": f"Failed to process averages: {e}"}
-
