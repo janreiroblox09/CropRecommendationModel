@@ -139,14 +139,15 @@
                 console.log("✅ Received Data:", data);
 
                 document.getElementById("data-container").innerHTML = `
-                    <strong>📢 Status:</strong> ${data.message} <br>
-                    <strong>🌿 Recommended Crop:</strong> ${data.latest_recommendation} <br><br>
+                    <strong>📢 Status:</strong> ${data.message} <br><br>
+                   
                     <strong>🧪 Nitrogen:</strong> ${data.latest_data.nitrogen} <br>
                     <strong>🧪 Phosphorus:</strong> ${data.latest_data.phosphorus} <br>
                     <strong>🧪 Potassium:</strong> ${data.latest_data.potassium} <br>
                     <strong>🌡 Temperature:</strong> ${data.latest_data.temperature}°C <br>
                     <strong>🌧 Rainfall:</strong> ${data.latest_data.rainfall} mm <br>
-                    <strong>🧪 Soil pH:</strong> ${data.latest_data.soilPH}
+                    <strong>🧪 Soil pH:</strong> ${data.latest_data.soilPH}<br><br>
+                     <strong>🌿 Recommended Crop:</strong> ${data.latest_recommendation} <br>
                 `;
             } catch (error) {
                 console.error("❌ Fetch error:", error);
