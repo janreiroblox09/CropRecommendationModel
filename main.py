@@ -1,35 +1,65 @@
-from fastapi import FastAPI
+import requests
 import pickle
 import numpy as np
+from fastapi import FastAPI
 from pydantic import BaseModel
 import traceback
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# ✅ Load the trained Random Forest model
-try:
-    with open("rfc.pkl", "rb") as model_file:
-        model = pickle.load(model_file)
-    print("✅ Random Forest Model Loaded Successfully!")
-except Exception as e:
-    print(f"❌ Error Loading Model: {e}\n{traceback.format_exc()}")
+# ✅ Download the trained Random Forest model from GitHub Releases
+def download_model():
+    url = 'https://github.com/janreiroblox09/CropRecommendationModel/releases/download/rfc/rfc.pkl'
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            with open("rfc.pkl", "wb") as f:
+                f.write(response.content)
+            print("✅ Model file downloaded successfully.")
+        else:
+            print(f"❌ Error downloading model: {response.status_code}")
+    except Exception as e:
+        print(f"❌ Error downloading model: {e}\n{traceback.format_exc()}")
+
+# ✅ Load the model, label encoder, and scaler after download
+def load_model():
+    try:
+        with open("rfc.pkl", "rb") as model_file:
+            model = pickle.load(model_file)
+        print("✅ Random Forest Model Loaded Successfully!")
+        return model
+    except Exception as e:
+        print(f"❌ Error Loading Model: {e}\n{traceback.format_exc()}")
+        return None
 
 # ✅ Load the label encoder
-try:
-    with open("label_encoder.pkl", "rb") as encoder_file:
-        label_encoder = pickle.load(encoder_file)
-    print("✅ Label Encoder Loaded Successfully!")
-except Exception as e:
-    print(f"❌ Error Loading Label Encoder: {e}\n{traceback.format_exc()}")
+def load_label_encoder():
+    try:
+        with open("label_encoder.pkl", "rb") as encoder_file:
+            label_encoder = pickle.load(encoder_file)
+        print("✅ Label Encoder Loaded Successfully!")
+        return label_encoder
+    except Exception as e:
+        print(f"❌ Error Loading Label Encoder: {e}\n{traceback.format_exc()}")
+        return None
 
 # ✅ Load the scaler
-try:
-    with open("scaler.pkl", "rb") as scaler_file:
-        scaler = pickle.load(scaler_file)
-    print("✅ Scaler Loaded Successfully!")
-except Exception as e:
-    print(f"❌ Error Loading Scaler: {e}\n{traceback.format_exc()}")
+def load_scaler():
+    try:
+        with open("scaler.pkl", "rb") as scaler_file:
+            scaler = pickle.load(scaler_file)
+        print("✅ Scaler Loaded Successfully!")
+        return scaler
+    except Exception as e:
+        print(f"❌ Error Loading Scaler: {e}\n{traceback.format_exc()}")
+        return None
+
+# ✅ Load everything at the start
+download_model()  # Download the model
+model = load_model()
+label_encoder = load_label_encoder()
+scaler = load_scaler()
 
 # ✅ Define Input Model (humidity removed)
 class AveragesData(BaseModel):
@@ -104,8 +134,9 @@ def receive_averages(data: AveragesData):
 # ✅ Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
 )
+
