@@ -62,7 +62,6 @@ class AveragesData(BaseModel):
     phosphorus: float
     potassium: float
     temperature: float
-    humidity: float
     rainfall: float
     soilPH: float
 
@@ -93,7 +92,7 @@ def receive_averages(data: AveragesData):
         # Convert input to NumPy array
         input_data = np.array([[ 
             data.nitrogen, data.phosphorus, data.potassium,
-            data.temperature, data.humidity, data.soilPH, data.rainfall
+            data.temperature,  data.soilPH, data.rainfall
         ]])
 
         print(f"🟡 Raw Input Data: {input_data}")
