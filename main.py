@@ -3,16 +3,42 @@ import pickle
 import numpy as np
 from pydantic import BaseModel
 import traceback
+import requests
+import os
 
 app = FastAPI()
 
+# GitHub URL for the model
+model_url = "https://github.com/janreiroblox09/CropRecommendationModel/releases/download/rfc/rfc.pkl"
+model_file_path = "rfc.pkl"
+
+# Function to download the model file from GitHub
+def download_model():
+    try:
+        response = requests.get(model_url)
+        if response.status_code == 200:
+            with open(model_file_path, "wb") as f:
+                f.write(response.content)
+            print("✅ Model file downloaded successfully.")
+        else:
+            print(f"❌ Error downloading model: {response.status_code}")
+    except Exception as e:
+        print(f"❌ Error downloading model: {e}")
+
 # ✅ Load the trained Random Forest model
-try:
-    with open("rfc.pkl", "rb") as model_file:
-        model = pickle.load(model_file)
-    print("✅ Random Forest Model Loaded Successfully!")
-except Exception as e:
-    print(f"❌ Error Loading Model: {e}\n{traceback.format_exc()}")
+def load_model():
+    try:
+        with open(model_file_path, "rb") as model_file:
+            model = pickle.load(model_file)
+        print("✅ Random Forest Model Loaded Successfully!")
+        return model
+    except Exception as e:
+        print(f"❌ Error Loading Model: {e}\n{traceback.format_exc()}")
+        return None
+
+# Download and load the model when the server starts
+download_model()
+model = load_model()
 
 # ✅ Load the label encoder
 try:
@@ -22,7 +48,7 @@ try:
 except Exception as e:
     print(f"❌ Error Loading Label Encoder: {e}\n{traceback.format_exc()}")
 
-# ✅ Load the scaler (NEW)
+# ✅ Load the scaler
 try:
     with open("scaler.pkl", "rb") as scaler_file:
         scaler = pickle.load(scaler_file)
@@ -72,7 +98,7 @@ def receive_averages(data: AveragesData):
 
         print(f"🟡 Raw Input Data: {input_data}")
 
-        # ✅ Scale the input data (IMPORTANT FIX)
+        # ✅ Scale the input data
         scaled_input = scaler.transform(input_data)
         print(f"🟢 Scaled Input Data: {scaled_input}")
 
@@ -102,7 +128,6 @@ def receive_averages(data: AveragesData):
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
         return {"error": f"Failed to process averages: {e}"}
-
 
 from fastapi.middleware.cors import CORSMiddleware
 
