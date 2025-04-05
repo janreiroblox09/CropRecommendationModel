@@ -58,13 +58,13 @@ def read_root():
 
 @app.post("/receive-averages/")
 def receive_averages(data: AveragesData):
-    """ Receive average data and predict crop recommendation """
+    """ Receive average data and predict top 3 crop recommendations """
     global latest_data, latest_recommendation
 
     try:
         print("✅ Received Average Data:", data)
 
-        # Convert input to NumPy array (humidity removed)
+        # ✅ Convert input to NumPy array
         input_data = np.array([[ 
             data.nitrogen, data.phosphorus, data.potassium,
             data.temperature, data.soilPH, data.rainfall
@@ -76,18 +76,26 @@ def receive_averages(data: AveragesData):
         scaled_input = scaler.transform(input_data)
         print(f"🟢 Scaled Input Data: {scaled_input}")
 
-        # ✅ Predict crop
-        prediction = model.predict(scaled_input)[0]
-        print(f"🎯 Predicted Label (Encoded): {prediction}")
+        # ✅ Predict probabilities
+        probas = model.predict_proba(scaled_input)[0]
 
-        crop = label_encoder.inverse_transform([prediction])[0]
-        print(f"✅ Final Recommended Crop: {crop}")
+        # ✅ Get top 3 crop indices
+        top_indices = np.argsort(probas)[-3:][::-1]
 
-        # ✅ Store the received data and recommendation
+        # ✅ Map to crop names and confidence
+        top_crops = [
+            {
+                "crop": label_encoder.inverse_transform([idx])[0],
+                "confidence": round(probas[idx] * 100, 2)
+            }
+            for idx in top_indices
+        ]
+
+        # ✅ Store for root route
         latest_data = data.dict()
-        latest_recommendation = crop
+        latest_recommendation = top_crops[0]["crop"]
 
-        return {"recommended_crop": crop}
+        return {"top_3_recommended_crops": top_crops}
 
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
@@ -96,7 +104,7 @@ def receive_averages(data: AveragesData):
 # ✅ Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all domains
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
