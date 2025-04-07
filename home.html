@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agriculture Life</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom right, #e3f2d2, #dcedc8);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #558b2f;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #6d6d6d;
+            margin-bottom: 40px;
+        }
+
+        .start-button {
+            background-color: #7cb342;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .start-button:hover {
+            background-color: #689f38;
+            transform: scale(1.05);
+        }
+
+        .start-button:active {
+            background-color: #558b2f;
+            transform: scale(0.98);
+        }
+
+        .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: #558b2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="icon">🌱</div>
+    <h1>Welcome to Agriculture Life</h1>
+    <p>Empowering farmers through smart soil analysis</p>
+    <button class="start-button" onclick="startAnalyzer()">🚀 Start Analyzer</button>
+
+    <script>
+        function startAnalyzer() {
+            window.location.href = "process.html"; // change this to your settings page if needed
+        }
+    </script>
+</body>
+</html>

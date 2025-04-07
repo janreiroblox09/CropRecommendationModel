@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Recommendation Data</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #f4f4f9;
+            color: #2e2e2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f8e9;
+        }
+
+        .app-container {
+            width: 600px;
+            max-width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .title-bar {
+            background-color: #7b9b3a;
+            color: white;
+            padding: 15px;
+            font-size: 20px;
+            text-align: center;
+            font-weight: 600;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .title-bar::before {
+            content: '🌾';
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        button {
+            background: #7b9b3a;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px;
+            position: relative;
+        }
+
+        button:hover {
+            background: #6a8c33;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            background: #5a7c29;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        #data-container {
+            background: #eaf6e1;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: left;
+            color: #333;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .loading {
+            color: #555;
+            font-style: italic;
+        }
+
+        strong {
+            color: #6a8c33;
+        }
+
+        .content:hover {
+            background-color: #f7f7f7;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .back-button-container button {
+            background: #c5e1a5;
+            color: #33691e;
+            padding: 10px 18px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            transition: background 0.3s;
+        }
+
+        .back-button-container button:hover {
+            background: #aed581;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="title-bar">
+            Crop Recommendation Data
+        </div>
+                
+        <!-- Back and Go to Home buttons outside the panel -->
+        <div class="back-button-container">
+            <button onclick="goHome()">🏠 Go to Home</button>
+            <button onclick="goBack()">🔙 Back</button>
+            
+        </div>
+
+        <div class="content">
+            <div class="button-container">
+                <button id="refreshButton" onclick="fetchData()">🔄 Refresh Data</button>
+                <button onclick="clearData()">🧹 Clear Data</button>
+            </div>
+
+            <div id="data-container">
+                <span class="loading">⏳ Loading data...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchData() {
+            const url = "https://croprecommendationmodel.onrender.com/"; 
+            
+            try {
+                // Display loading message before fetching data
+                document.getElementById("data-container").innerHTML = "<span class='loading'>⏳ Fetching data...</span>";
+                
+                const response = await fetch(url);
+    
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+    
+                const data = await response.json();
+                console.log("✅ Received Data:", data);
+    
+                // Check if data is available
+                if (!data.latest_data) {
+                    document.getElementById("data-container").innerHTML = "<span class='error'>❌ No data available. Please check the backend or data source.</span>";
+                    return;
+                }
+    
+                // Format numbers to 2 decimal places
+                const nitrogen = data.latest_data.nitrogen.toFixed(2);
+                const phosphorus = data.latest_data.phosphorus.toFixed(2);
+                const potassium = data.latest_data.potassium.toFixed(2);
+                const temperature = data.latest_data.temperature.toFixed(2);
+                const rainfall = data.latest_data.rainfall.toFixed(2);
+                const soilPH = data.latest_data.soilPH.toFixed(2);
+    
+                document.getElementById("data-container").innerHTML = ` 
+                    <strong>📢 Status:</strong> ${data.message} <br>
+                    <strong>📊 Data:</strong> <br>
+                    <strong>🧪 Nitrogen:</strong> ${nitrogen} mg/kg<br>
+                    <strong>🧪 Phosphorus:</strong> ${phosphorus} mg/kg<br>
+                    <strong>🧪 Potassium:</strong> ${potassium} mg/kg<br>
+                    <strong>🌡 Temperature:</strong> ${temperature}°C <br>
+                    <strong>🌧 Rainfall:</strong> ${rainfall} mm <br>
+                    <strong>🧪 Soil pH:</strong> ${soilPH}<br><br>
+                    <strong>🌿 Recommended Crop:</strong> ${data.latest_recommendation.toUpperCase()}
+                `;
+            } catch (error) {
+                console.error("❌ Fetch error:", error);
+                document.getElementById("data-container").innerHTML = `<span class="error">❌ Failed to load data. Check API connection.</span>`;
+            }
+        }
+    
+        async function clearData() {
+            const googleAppScriptUrl = "https://script.google.com/macros/s/AKfycbxgMCvg0dApIL3FVQRpvelIHJd6KlvPgrTkN883m8ctU02_Kt51DW0ZQGxwcoOZhkUW/exec"; // Replace with your Google Apps Script URL
+
+            try {
+                const refreshButton = document.getElementById("refreshButton");
+
+                // Disable the refresh button immediately
+                refreshButton.disabled = true;
+                refreshButton.classList.add("clicked");
+
+                // Display success message first
+                document.getElementById("data-container").innerHTML = "<span class='loading'>⏳ Data cleared successfully.</span>";
+
+                // Start countdown after 2 seconds
+                setTimeout(() => {
+                    document.getElementById("data-container").innerHTML = "<span class='loading'>⏳ Sensor resetting, wait for <span id='countdown'>2:00</span> before refreshing.</span>";
+                    startCountdown(120); // Start countdown for 2 minutes
+                }, 2000);
+
+                const response = await fetch(googleAppScriptUrl, { method: 'GET' });
+
+                if (response.ok) {
+                    // Do nothing, success message is already shown
+                } else {
+                    throw new Error("Failed to clear data.");
+                }
+
+            } catch (error) {
+                console.error("❌ Error clearing data:", error);
+                document.getElementById("data-container").innerHTML = `<span class="error">❌ Failed to clear data. Check Apps Script connection.</span>`;
+            }
+        }
+
+        // Function to start the countdown with dynamic minutes and seconds
+        function startCountdown(seconds) {
+            let countdown = seconds;
+            const countdownDisplay = document.getElementById('countdown');
+
+            // Make sure countdownDisplay exists before proceeding
+            if (!countdownDisplay) {
+                return;
+            }
+
+            const countdownInterval = setInterval(() => {
+                const minutes = Math.floor(countdown / 60);
+                const remainingSeconds = countdown % 60;
+                countdownDisplay.innerHTML = `${minutes}:${remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds}`;
+
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById("refreshButton").disabled = false;
+                    document.getElementById("refreshButton").classList.remove("clicked");
+                    document.getElementById("data-container").innerHTML = "<span class='loading'>✅ Finished, you can refresh now</span>";
+                }
+
+                countdown--; // Decrement countdown after updating the display
+            }, 1000);
+        }
+
+        
+        // Fetch data on page load
+        fetchData();
+
+        function goBack() {
+            window.location.href = "air-drying.html"; 
+        }
+
+        function goHome() {
+            window.location.href = "home.html"; 
+        }
+
+    </script>
+</body>
+</html>
