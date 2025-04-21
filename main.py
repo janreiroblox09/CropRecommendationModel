@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import traceback
 import requests
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -65,18 +66,20 @@ class AveragesData(BaseModel):
     rainfall: float
     soilPH: float
 
-# ✅ Global variable to store the latest data and recommendation
+# ✅ Global variables to store the latest data and recommendation
 latest_data = None
 latest_recommendation = None
+top_3_recommended_crops = []
 
 @app.get("/")
 def read_root():
-    """ Root endpoint to check API status """
+    """ Root endpoint to check API status and return latest prediction """
     if latest_data and latest_recommendation:
         return {
             "message": "Crop Recommendation API is Running!",
             "latest_data": latest_data,
             "latest_recommendation": latest_recommendation,
+            "top_3_recommendations": top_3_recommended_crops
         }
     else:
         return {"message": "Crop Recommendation API is Running! No data received yet."}
@@ -84,7 +87,7 @@ def read_root():
 @app.post("/receive-averages/")
 def receive_averages(data: AveragesData):
     """ Receive average data and predict top 3 crop recommendations """
-    global latest_data, latest_recommendation
+    global latest_data, latest_recommendation, top_3_recommended_crops
 
     try:
         print("✅ Received Average Data:", data)
@@ -119,21 +122,21 @@ def receive_averages(data: AveragesData):
 
         # Store the received data and recommendation
         latest_data = data.dict()
-        latest_recommendation = top_crops[0]["crop"]  # The best crop
+        latest_recommendation = top_crops[0]["crop"]
+        top_3_recommended_crops.clear()
+        top_3_recommended_crops.extend(top_crops)
 
-        # Return the top 3 recommended crops
         return {"top_3_recommended_crops": top_crops}
 
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
         return {"error": f"Failed to process averages: {e}"}
 
-from fastapi.middleware.cors import CORSMiddleware
-
+# ✅ CORS settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all domains (replace with specific domains if needed)
+    allow_origins=["*"],  # Allow all domains
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
