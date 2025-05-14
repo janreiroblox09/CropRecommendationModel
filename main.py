@@ -79,14 +79,14 @@ def read_root():
             "message": "Crop Recommendation API is Running!",
             "latest_data": latest_data,
             "latest_recommendation": latest_recommendation,
-            "top_10_recommendations": top_recommended_crops
+            "top_5_recommendations": top_recommended_crops
         }
     else:
         return {"message": "Crop Recommendation API is Running! No data received yet."}
 
 @app.post("/receive-averages/")
 def receive_averages(data: AveragesData):
-    """ Receive average data and predict top 10 crop recommendations """
+    """ Receive average data and predict top 5 crop recommendations """
     global latest_data, latest_recommendation, top_recommended_crops
 
     try:
@@ -108,8 +108,8 @@ def receive_averages(data: AveragesData):
         probas = model.predict_proba(scaled_input)[0]
         print(f"🟠 Predicted Probabilities: {probas}")
 
-        # Get the top 10 crop indices (highest probabilities)
-        top_indices = np.argsort(probas)[-10:][::-1]
+        # Get the top 5 crop indices (highest probabilities)
+        top_indices = np.argsort(probas)[-5:][::-1]
         top_crops = []
 
         # Map the indices to crop names and confidence scores
@@ -118,7 +118,7 @@ def receive_averages(data: AveragesData):
             confidence = round(probas[idx] * 100, 2)
             top_crops.append({"crop": crop, "confidence": confidence})
 
-        print(f"✅ Top 10 Recommended Crops: {top_crops}")
+        print(f"✅ Top 5 Recommended Crops: {top_crops}")
 
         # Store the received data and recommendation
         latest_data = data.dict()
@@ -126,7 +126,7 @@ def receive_averages(data: AveragesData):
         top_recommended_crops.clear()
         top_recommended_crops.extend(top_crops)
 
-        return {"top_10_recommended_crops": top_crops}
+        return {"top_5_recommended_crops": top_crops}
 
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
