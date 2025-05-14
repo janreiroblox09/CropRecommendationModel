@@ -69,7 +69,7 @@ class AveragesData(BaseModel):
 # ✅ Global variables to store the latest data and recommendation
 latest_data = None
 latest_recommendation = None
-top_3_recommended_crops = []
+top_recommended_crops = []
 
 @app.get("/")
 def read_root():
@@ -79,15 +79,15 @@ def read_root():
             "message": "Crop Recommendation API is Running!",
             "latest_data": latest_data,
             "latest_recommendation": latest_recommendation,
-            "top_3_recommendations": top_3_recommended_crops
+            "top_10_recommendations": top_recommended_crops
         }
     else:
         return {"message": "Crop Recommendation API is Running! No data received yet."}
 
 @app.post("/receive-averages/")
 def receive_averages(data: AveragesData):
-    """ Receive average data and predict top 3 crop recommendations """
-    global latest_data, latest_recommendation, top_3_recommended_crops
+    """ Receive average data and predict top 10 crop recommendations """
+    global latest_data, latest_recommendation, top_recommended_crops
 
     try:
         print("✅ Received Average Data:", data)
@@ -108,8 +108,8 @@ def receive_averages(data: AveragesData):
         probas = model.predict_proba(scaled_input)[0]
         print(f"🟠 Predicted Probabilities: {probas}")
 
-        # Get the top 3 crop indices (highest probabilities)
-        top_indices = np.argsort(probas)[-3:][::-1]  # Sort in descending order
+        # Get the top 10 crop indices (highest probabilities)
+        top_indices = np.argsort(probas)[-10:][::-1]
         top_crops = []
 
         # Map the indices to crop names and confidence scores
@@ -118,15 +118,15 @@ def receive_averages(data: AveragesData):
             confidence = round(probas[idx] * 100, 2)
             top_crops.append({"crop": crop, "confidence": confidence})
 
-        print(f"✅ Top 3 Recommended Crops: {top_crops}")
+        print(f"✅ Top 10 Recommended Crops: {top_crops}")
 
         # Store the received data and recommendation
         latest_data = data.dict()
         latest_recommendation = top_crops[0]["crop"]
-        top_3_recommended_crops.clear()
-        top_3_recommended_crops.extend(top_crops)
+        top_recommended_crops.clear()
+        top_recommended_crops.extend(top_crops)
 
-        return {"top_3_recommended_crops": top_crops}
+        return {"top_10_recommended_crops": top_crops}
 
     except Exception as e:
         print(f"❌ Error Receiving Averages: {e}\n{traceback.format_exc()}")
